@@ -1,30 +1,41 @@
 #!/usr/bin/python3
+"""
+Module for tasks
+"""
+import json
+import requests
+from sys import argv
 
-"""
-    `Export to JSON` module
-"""
+
+def main(id):
+    """
+    Retrieves user information and todos based on the given user ID.
+    """
+    base_url = "https://jsonplaceholder.typicode.com"
+    user_url = "{}/users/{}".format(base_url, id)
+    todo_url = "{}/todos?userId={}".format(base_url, id)
+
+    user = requests.get(user_url).json()
+    todos = requests.get(todo_url).json()
+
+    final_dict = {
+        f"{id}": []
+    }
+
+    for task in todos:
+        final_dict[f"{id}"].append(
+            {
+                "task": task["title"],
+                "completed": task["completed"],
+                "username": user["username"],
+            }
+        )
+
+    with open(f"{id}.json", "w") as f:
+        json.dump(final_dict, f)
 
 
 if __name__ == "__main__":
-
-    import json
-    import requests
-    from sys import argv
-
-    if len(argv) < 2:
-        exit()
-
-    new_dict = {}
-    new_list = []
-
-    username = requests.get(f"https://jsonplaceholder.\
-typicode.com/users/{argv[1]}").json().get('username')
-
-    todos = requests.get(f"https://jsonplaceholder.typicode.\
-com/todos?userId={argv[1]}").json()
-    for todo in todos:
-        new_list.append({'task': todo.get('title'),
-                         'completed': todo.get('completed'),
-                         'username': username})
-    new_dict[str(argv[1])] = new_list
-    json.dump(new_dict, open(f"{argv[1]}.json", "w"))
+    if len(argv) == 2:
+        id = int(argv[1])
+        main(id)
